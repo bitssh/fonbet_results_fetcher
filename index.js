@@ -99,20 +99,25 @@ fonbetResults = {
 
 
 (async () => {
-    let date = new Date('2018-03-01');
-    const yesterday = new Date();
-    yesterday.setUTCHours(0, 0, 0, 0);
-    yesterday.setDate(yesterday.getDate() - 1);
+    // 2018-03-01
+    let date = new Date('2020-03-18');
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
 
-    while (date < yesterday) {
+    while (date < today) {
+        try {
+            const url = await fonbetResults.getApiUrl(date);
+            let results = await fonbetResults.fetchResults(url);
+            let sections = fonbetResults.parseSectionEvents(results);
+            sections.forEach(section => {
+                fonbetResults.saveSectionEvents(section);
+            });
+        } catch (err) {
+            console.error(err.message);
+        }
+
         date.setDate(date.getDate() + 1);
     }
-    const url = await fonbetResults.getApiUrl(date);
-    let results = await fonbetResults.fetchResults(url);
-    let sections = fonbetResults.parseSectionEvents(results);
-    sections.forEach(section => {
-        fonbetResults.saveSectionEvents(section);
-    });
 
 
 })();
