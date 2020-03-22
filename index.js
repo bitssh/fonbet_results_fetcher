@@ -2,6 +2,7 @@ console.log('initialized');
 const fetch = require('node-fetch');
 const _ = require('lodash');
 const fileUtils = require('../fonbet_live_watcher/src/fileTools');
+const {EventParser} = require("./EventParser");
 
 const fonbetDomainUrl = 'https://www.fonbet.ru';
 const filterSportMatching = 'Киберфутбол';
@@ -43,8 +44,8 @@ fonbetResults = {
     /**
      *
      * @param {Array} resultsResponseData.sports
-     * @param {Array <{sport: String, name: String, events: Array<number>}>} resultsResponseData.sections
-     * @param {Array <{id: String}>} resultsResponseData.events
+     * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
+     * @param {Array <{id: string}>} resultsResponseData.events
      *
      */
     parseSectionEvents (resultsResponseData) {
@@ -73,7 +74,8 @@ fonbetResults = {
         return sections;
     },
     /**
-     * @param {String} section.shortName
+     * @param {string} section.shortName
+     * @param {string} section.shortName
      * @param {Array <{id: string, startTime: number, name: string, score: string, comment3: string}>} section.events
      */
     saveSectionEvents(section) {
@@ -81,14 +83,9 @@ fonbetResults = {
 
             let startDateTime = new Date(event.startTime);
 
-            let firstGoalInfo = this.parseFirstGoalComment(event);
-            let scoreInfo;
-            try {
-                scoreInfo = this.parseScore(event.score);
-            } catch (err) {
-                console.error(`Failed to parse score "${event.score}". ` + err.message);
-                throw err;
-            }
+            let parsedEvent = new EventParser(event);
+            let firstGoalInfo = parsedEvent.firstGoal;
+            let scoreInfo = parsedEvent.score;
 
             let csvRow = [
                 startDateTime.toLocaleDateString(),
@@ -102,43 +99,6 @@ fonbetResults = {
             // fileUtils.appendFile(`${section.shortName}.csv`, csvRow.join(';'), true);
         });
     },
-    parseScore(scoreString) {
-        let matches = scoreString.match(/\d+\D\d+/g);
-        if (_.isEmpty(matches)) {
-            throw new Error(`Invalid score string "${scoreString}"`);
-        }
-
-        let totals = matches[0].split(/\D+/);
-        let firstTime = matches.length > 1 ? matches[1].split(/\D+/) : null;
-
-        let stringifiedResult = `${totals[0]}:${totals[1]}` + ( firstTime ? `(${firstTime[0]}-${firstTime[1]})` : '');
-        if (stringifiedResult !== scoreString) {
-            throw new Error(`Incorrectly parsed score string "${scoreString}" - is not equals ${stringifiedResult}`);
-        }
-        return { totals, firstTime };
-    },
-    parseFirstGoalComment({ comment3: comment }) {
-        if (comment && comment.startsWith('1-й гол:'))  {
-            let time = comment.match(/\d+(?=-мин)/);
-            let teamNo = comment.match(/\d+(?=-я)/);
-            let result = {
-                time: time ? time[0] : null,
-                teamNo: teamNo ? teamNo[0] : null,
-            };
-
-            let stringifiedTeamNo = teamNo ? ` ${teamNo}-я` : '';
-            let stringifiedTime = time ? ` на ${time}-мин` : '';
-            let stringifiedResult = `1-й гол:${stringifiedTeamNo}${stringifiedTime}`;
-            if (stringifiedResult !== comment) {
-                throw new Error(`Incorrectly parsed first goal comment "${comment}" - is not equals "${stringifiedResult}"`);
-            }
-
-            return result;
-        }
-        return null;
-    }
-
-
 
 };
 
