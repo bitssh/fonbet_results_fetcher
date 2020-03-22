@@ -42,13 +42,17 @@ class EventParser {
     /**
      *
      * @param comment - e.g. "1-й гол: на 34-мин", "1-й гол: 2-я", "1-й гол: 1-я на 20-мин",
-     * @returns {null|{teamNo: (*|null), time: (*|null)}}
+     * @returns {{teamNo: null, time: null}}
      */
     parseFirstGoalComment(comment) {
+        let result = {
+            time: null,
+            teamNo: null,
+        };
         if (comment && comment.startsWith('1-й гол:'))  {
             let time = comment.match(/\d+(?=-мин)/);
             let teamNo = comment.match(/\d+(?=-я)/);
-            let result = {
+            result = {
                 time: time ? time[0] : null,
                 teamNo: teamNo ? teamNo[0] - 1 : null,
             };
@@ -61,16 +65,15 @@ class EventParser {
                     throw new Error(`Incorrectly parsed first goal comment "${comment}" - is not equals "${strResult}"`);
                 }
             }
-            return result;
         }
-        return null;
+        return result;
     }
     /**
      *
      * @returns {null|number|*}
      */
     get firstGoalTeamNo() {
-        let result = _.get(this.firstGoal, 'teamNo', null);
+        let result = this.firstGoal.teamNo;
         if (result !== null)
             return result;
 
