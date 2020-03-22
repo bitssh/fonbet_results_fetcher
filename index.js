@@ -43,6 +43,8 @@ fonbetResults = {
      * @param {Array} resultsResponseData.sports
      * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
      * @param {Array <{id: string}>} resultsResponseData.events
+     * @param resultsResponseData
+     * @return {{sport: string, name: string, events: Array<number> }[]}
      */
     parseSectionEvents (resultsResponseData) {
         if (!this.sportId) {
@@ -70,9 +72,9 @@ fonbetResults = {
         return sections;
     },
     /**
+     * @param section
      * @param {string} section.shortName
-     * @param {string} section.shortName
-     * @param {Array <{id: string, startTime: number, name: string, score: string, comment3: string}>} section.events
+     * @param {Array <Object>} section.events
      */
     saveSectionEvents(section) {
         section.events.forEach((event) => {
