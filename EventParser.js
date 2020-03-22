@@ -14,7 +14,7 @@ class EventParser {
             this.firstGoal = this.parseFirstGoalComment(event.comment3);
             this.teamNames = event.name.split(' - ');
         } catch (err) {
-            console.error(`Failed to parse event {"${event.score}", "${event.comment3}". ` + err.message);
+            console.error(`${err.message}\nFailed to parse event ${JSON.stringify(event)}`);
             throw err;
         }
     }
