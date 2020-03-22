@@ -6,11 +6,13 @@ class EventParser {
      * @param {Object} event
      * @param {string} event.score
      * @param {string} event.comment3
+     * @param {string} event.name
      */
     constructor(event) {
         try {
             this.score =  this.parseScore(event.score);
             this.firstGoal = this.parseFirstGoalComment(event.comment3);
+            this.teamNames = event.name.split(' - ');
         } catch (err) {
             console.error(`Failed to parse event {"${event.score}", "${event.comment3}". ` + err.message);
             throw err;
@@ -83,6 +85,18 @@ class EventParser {
         else
             return null;
     }
+
+    /**
+     *
+     * @returns {string}
+     */
+    get firstGoalTeamName() {
+        if (this.firstGoalTeamNo === null) {
+            return ''
+        }
+        return this.teamNames[this.firstGoalTeamNo];
+    }
+
 }
 
 exports.EventParser = EventParser;
