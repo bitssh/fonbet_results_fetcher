@@ -48,7 +48,7 @@ class EventParser {
             let teamNo = comment.match(/\d+(?=-я)/);
             let result = {
                 time: time ? time[0] : null,
-                teamNo: teamNo ? teamNo[0] : null,
+                teamNo: teamNo ? teamNo[0] - 1 : null,
             };
 
             if (validateParsing) {
@@ -62,6 +62,26 @@ class EventParser {
             return result;
         }
         return null;
+    }
+    /**
+     *
+     * @returns {null|number|*}
+     */
+    get firstGoalTeamNo() {
+        let result = _.get(this.firstGoal, 'teamNo', null);
+        if (result !== null)
+            return result;
+
+        let score = this.score.firstTime;
+        if (!score || score[0] === score[1]) {
+            score = this.score.totals;
+        }
+        if (score[0] > score[1])
+            return 0;
+        else if (score[0] < score[1])
+            return  1;
+        else
+            return null;
     }
 }
 
