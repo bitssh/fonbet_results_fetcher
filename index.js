@@ -78,12 +78,17 @@ fonbetResults = {
      */
     saveSectionEvents(section) {
         section.events.forEach((event) => {
-            console.log(event.score, event.comment3);
 
             let startDateTime = new Date(event.startTime);
 
             let firstGoalInfo = this.parseFirstGoalComment(event);
-            let scoreInfo = this.parseScore(event.score);
+            let scoreInfo;
+            try {
+                scoreInfo = this.parseScore(event.score);
+            } catch (err) {
+                console.error(`Failed to parse score "${event.score}". ` + err.message);
+                throw err;
+            }
 
             let csvRow = [
                 startDateTime.toLocaleDateString(),
@@ -103,21 +108,32 @@ fonbetResults = {
             throw new Error(`Invalid score string "${scoreString}"`);
         }
 
-        let result = {
-            totals: matches[0].split(/\D+/),
-            firstTime: matches.length > 0 ? matches[1].split(/\D+/) : null,
-        };
-        console.log(scoreString, result);
-        return result;
+        let totals = matches[0].split(/\D+/);
+        let firstTime = matches.length > 1 ? matches[1].split(/\D+/) : null;
+
+        let stringifiedResult = `${totals[0]}:${totals[1]}` + ( firstTime ? `(${firstTime[0]}-${firstTime[1]})` : '');
+        if (stringifiedResult !== scoreString) {
+            throw new Error(`Incorrectly parsed score string "${scoreString}" - is not equals ${stringifiedResult}`);
+        }
+        return { totals, firstTime };
     },
     parseFirstGoalComment({ comment3: comment }) {
         if (comment && comment.startsWith('1-й гол:'))  {
             let time = comment.match(/\d+(?=-мин)/);
             let teamNo = comment.match(/\d+(?=-я)/);
-            return {
-                time: time[0],
+            let result = {
+                time: time ? time[0] : null,
                 teamNo: teamNo ? teamNo[0] : null,
+            };
+
+            let stringifiedTeamNo = teamNo ? ` ${teamNo}-я` : '';
+            let stringifiedTime = time ? ` на ${time}-мин` : '';
+            let stringifiedResult = `1-й гол:${stringifiedTeamNo}${stringifiedTime}`;
+            if (stringifiedResult !== comment) {
+                throw new Error(`Incorrectly parsed first goal comment "${comment}" - is not equals "${stringifiedResult}"`);
             }
+
+            return result;
         }
         return null;
     }
@@ -136,31 +152,12 @@ fonbetResults = {
     while (date < yesterday) {
         date.setDate(date.getDate() + 1);
     }
-    // const url = await fonbetResults.getApiUrl(date);
-    // let results = await fonbetResults.fetchResults(url);
-    // let sections = fonbetResults.parseSectionEvents(results);
-    // sections.forEach(section => {
-    //     fonbetResults.saveSectionEvents(section);
-    // });
-    let section = {
-        "id": 7,
-        "sport": "52",
-        "name": "Киберфутбол. FIFA 17. Мировая лига. Сезон 5. twitch.tv/fonbet_fifa",
-        "events": [
-            {
-                "id": "5023",
-                "startTime": 1584804300,
-                "name": "Мексика (к) - Франция (к)",
-                "score": "0:2(0-2)",
-                "status": 3,
-                "comment1": "",
-                "comment2": "",
-                "comment3": "1-й гол: на 34-мин",
-                "goalOrder": ""
-            },
-        ],
-        "shortName": "Мировая лига"
-    };
+    const url = await fonbetResults.getApiUrl(date);
+    let results = await fonbetResults.fetchResults(url);
+    let sections = fonbetResults.parseSectionEvents(results);
+    sections.forEach(section => {
+        fonbetResults.saveSectionEvents(section);
+    });
 
-    fonbetResults.saveSectionEvents(section);
+
 })();
