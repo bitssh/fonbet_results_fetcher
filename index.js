@@ -76,23 +76,20 @@ fonbetResults = {
      */
     saveSectionEvents(section) {
         section.events.forEach((event) => {
-
-            let startDateTime = new Date(event.startTime);
-
+            let startDateTime = new Date(event.startTime * 1000);
             let parsedEvent = new EventParser(event);
-            let firstGoalInfo = parsedEvent.firstGoal;
             let scoreInfo = parsedEvent.score;
 
             let csvRow = [
                 startDateTime.toLocaleDateString(),
                 startDateTime.toLocaleTimeString(),
                 event.name,
-                scoreInfo.firstTime ? `${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
-                `${scoreInfo.totals[0]} - ${scoreInfo.totals[1]}`,
+                scoreInfo.firstTime ? `'${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
+                parsedEvent.firstGoal.time ? parsedEvent.firstGoal.time : '',
+                parsedEvent.firstGoalTeamName,
+                `'${scoreInfo.totals[0]} - ${scoreInfo.totals[1]}`,
             ];
-            console.log(csvRow);
-
-            // fileUtils.appendFile(`${section.shortName}.csv`, csvRow.join(';'), true);
+            fileUtils.appendFile(`${section.shortName}.csv`, csvRow.join(';'), true);
         });
     },
 
