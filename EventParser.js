@@ -16,6 +16,11 @@ class EventParser {
             throw err;
         }
     }
+    /**
+     *
+     * @param scoreString - e.g. "2:2(1-0)", "1:3"
+     * @returns {{firstTime: (null|string), totals: string[]}}
+     */
     parseScore(scoreString) {
         let matches = scoreString.match(/\d+\D\d+/g);
         if (_.isEmpty(matches)) {
@@ -25,13 +30,18 @@ class EventParser {
         let firstTime = matches.length > 1 ? matches[1].split(/\D+/) : null;
 
         if (validateParsing) {
-            let stringifiedResult = `${totals[0]}:${totals[1]}` + (firstTime ? `(${firstTime[0]}-${firstTime[1]})` : '');
-            if (stringifiedResult !== scoreString) {
-                throw new Error(`Incorrectly parsed score string "${scoreString}" - is not equals ${stringifiedResult}`);
+            let strResult = `${totals[0]}:${totals[1]}` + (firstTime ? `(${firstTime[0]}-${firstTime[1]})` : '');
+            if (strResult !== scoreString) {
+                throw new Error(`Incorrectly parsed score string "${scoreString}" - is not equals ${strResult}`);
             }
         }
         return { totals, firstTime };
     }
+    /**
+     *
+     * @param comment - e.g. "1-й гол: на 34-мин", "1-й гол: 2-я", "1-й гол: 1-я на 20-мин",
+     * @returns {null|{teamNo: (*|null), time: (*|null)}}
+     */
     parseFirstGoalComment(comment) {
         if (comment && comment.startsWith('1-й гол:'))  {
             let time = comment.match(/\d+(?=-мин)/);

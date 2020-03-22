@@ -39,14 +39,10 @@ fonbetResults = {
         }
         return JSON.parse(await response.text());
     },
-
-
     /**
-     *
      * @param {Array} resultsResponseData.sports
      * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
      * @param {Array <{id: string}>} resultsResponseData.events
-     *
      */
     parseSectionEvents (resultsResponseData) {
         if (!this.sportId) {
