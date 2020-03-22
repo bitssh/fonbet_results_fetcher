@@ -1,22 +1,92 @@
 console.log('initialized');
 const fetch = require('node-fetch');
+const _ = require('lodash');
+
+const fonbetDomainUrl = 'https://www.fonbet.ru';
+const filterSportMatching = 'Киберфутбол';
+const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби'];
+
+fonbetResults = {
+    apiUrls: [],
+    sportId: null,
+
+    async getApiUrl(date) {
+        const urlParams = new URLSearchParams({
+            locale: 'ru',
+            lastUpdate: 0,
+            _: Date.now(),
+            lineDate: date.toISOString().split('T')[0],
+        });
+        return `${await this.getRandomUrl()}/results/results.json.php?${urlParams}`
+    },
+
+    async getRandomUrl () {
+        if (_.isEmpty(this.apiUrls)) {
+            const response = await fetch(`${fonbetDomainUrl}/urls.json`);
+            let { common: apiUrls } = await response.json();
+            this.apiUrls = apiUrls.map(url => `https:${url}`);
+        }
+        return _.sample(this.apiUrls);
+    },
+    async fetchResults (url) {
+        console.log(`fetching ${url}`);
+        let response = await fetch(url);
+        if (!response.ok) {
+            console.error(`${new Date().toLocaleString()} ${response.status} - ${await response.text()}`);
+            return;
+        }
+        return JSON.parse(await response.text());
+    },
 
 
-async function fetchData (date) {
-    const url = 'https://clientsapi31.bkfon-resource.ru/results/results.json.php?locale=ru&lastUpdate=0&_=1584813939640&lineDate=2020-03-20';
-    let response = await fetch(url);
-    if (!response.ok) {
-        console.error(`${new Date().toLocaleString()} ${response.status} - ${await response.text()}`.red);
-        return;
+    /**
+     *
+     * @param {Array} resultsResponseData.sports
+     * @param {Array <{sport: String, name: String}>} resultsResponseData.sections
+     * @param {Array} resultsResponseData.events
+     *
+     */
+    parseSectionEvents (resultsResponseData) {
+        if (!this.sportId) {
+            const sport = resultsResponseData.sports.find(sport => sport.name === filterSportMatching);
+            if (!sport) {
+                console.error('Fetched data', resultsResponseData);
+                throw new Error(`Not found sport name "${filterSectionsContaining}"`);
+            }
+            this.sportId = sport.id;
+        }
+
+        let sections = resultsResponseData.sections.filter(section => section.sport === String(this.sportId));
+        sections = sections.filter(section => filterSectionsContaining.some(item => section.name.includes(item)));
+
+        return sections;
+    },
+    /**
+     *
+     * @param {Object} section
+     */
+    saveSectionEvents(section) {
+        // fileUtils.appendFile(section.name, '');
+    },
+
+
+
+};
+
+
+(async () => {
+    let date = new Date('2018-03-01');
+    const yesterday = new Date();
+    yesterday.setUTCHours(0, 0, 0, 0);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    while (date < yesterday) {
+        date.setDate(date.getDate() + 1);
     }
-    const responseText = await response.text();
-    console.log(JSON.parse(responseText));
-
-}
-
-function saveData(data) {
-
-}
-
-
-fetchData();
+    const url = await fonbetResults.getApiUrl(date);
+    let results = await fonbetResults.fetchResults(url);
+    let sections = fonbetResults.parseSectionEvents(results);
+    sections.forEach(section => {
+        fonbetResults.saveSectionEvents(section);
+    });
+})();
