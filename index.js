@@ -1,6 +1,6 @@
 const {parseSectionEvents} = require("./responseParsing");
 const {parseSections} = require("./responseParsing");
-const {saveParsedEvent} = require("./dataSaving");
+const {writeParsedEventToCSV} = require("./dataSaving");
 const {fetcher} = require("./dataFetching");
 
 const START_DATE = '2018-10-02';
@@ -21,7 +21,7 @@ console.log('initialized');
                 }
                 for (let section of sections ) {
                     for (let event of section.parsedEvents ) {
-                        saveParsedEvent(event);
+                        writeParsedEventToCSV(event, section.shortName);
                     }
                 }
             }
