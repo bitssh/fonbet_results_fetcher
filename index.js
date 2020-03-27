@@ -6,7 +6,7 @@ const {EventParser} = require("./EventParser");
 
 const fonbetDomainUrl = 'https://www.fonbet.ru';
 const filterSportMatching = 'Киберфутбол';
-const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби'];
+const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби', 'Серия сборных'];
 
 fonbetResults = {
     apiUrls: [],
