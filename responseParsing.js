@@ -47,9 +47,15 @@ exports.parseSectionEvents = function parseSectionEvents(section) {
     const result = section.events.map((event) => {
         EventParser.logUnusualEventData(event);
         if (!event.score) {
+            console.info('Event has empty score', event);
             return null;
         }
-        return new EventParser(event);
+        try {
+            return new EventParser(event);
+        } catch (e) {
+            console.error(`Failed to parse event\n${e.message}`, event);
+            return null;
+        }
     });
     return _.compact(result);
 };
