@@ -55,6 +55,9 @@ fonbetResults = {
             this.sportId = sport.id;
         }
 
+        if (!resultsResponseData.sections)
+            return null;
+
         let sections = resultsResponseData.sections.filter(section => section.sport === String(this.sportId));
         sections = sections.filter(section => filterSectionsContaining.some(item => {
             const result = section.name.includes(item);
@@ -80,6 +83,9 @@ fonbetResults = {
             let startDateTime = new Date(event.startTime * 1000);
 
             EventParser.logUnusualEventData(event);
+            if (!event.score) {
+                return;
+            }
             let parsedEvent = new EventParser(event);
             let scoreInfo = parsedEvent.score;
 
@@ -110,9 +116,11 @@ fonbetResults = {
             const url = await fonbetResults.getApiUrl(date);
             let results = await fonbetResults.fetchResults(url);
             let sections = fonbetResults.parseSectionEvents(results);
-            sections.forEach(section => {
-                fonbetResults.saveSectionEvents(section);
-            });
+            if (sections) {
+                sections.forEach(section => {
+                    fonbetResults.saveSectionEvents(section);
+                });
+            }
         } catch (err) {
             console.error(err.message);
         }
