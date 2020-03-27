@@ -1,109 +1,9 @@
+const {parseSectionEvents} = require("./responseParsing");
+const {parseSections} = require("./responseParsing");
+const {saveParsedEvent} = require("./dataSaving");
+const {fetcher} = require("./dataFetching");
+
 console.log('initialized');
-const fetch = require('node-fetch');
-const _ = require('lodash');
-const fileUtils = require('../fonbet_live_watcher/src/fileTools');
-const {EventParser} = require("./EventParser");
-const fonbetDomainUrl = 'https://www.fonbet.ru';
-const filterSportMatching = 'Киберфутбол';
-const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби', 'Серия сборных'];
-
-fonbetResults = {
-    apiUrls: [],
-    sportId: null,
-
-    async getApiUrl(date) {
-        const urlParams = new URLSearchParams({
-            locale: 'ru',
-            lastUpdate: 0,
-            _: Date.now(),
-            lineDate: date.toISOString().split('T')[0],
-        });
-        return `${await this.getRandomUrl()}/results/results.json.php?${urlParams}`
-    },
-
-    async getRandomUrl() {
-        if (_.isEmpty(this.apiUrls)) {
-            const response = await fetch(`${fonbetDomainUrl}/urls.json`);
-            let {common: apiUrls} = await response.json();
-            this.apiUrls = apiUrls.map(url => `https:${url}`);
-        }
-        return _.sample(this.apiUrls);
-    },
-    async fetchResults(url) {
-        console.log(`fetching ${url}`);
-        let response = await fetch(url);
-        if (!response.ok) {
-            console.error(`${new Date().toLocaleString()} ${response.status} - ${await response.text()}`);
-            return;
-        }
-        return JSON.parse(await response.text());
-    },
-    /**
-     * @param {Array} resultsResponseData.sports
-     * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
-     * @param {Array <{id: string}>} resultsResponseData.events
-     * @param resultsResponseData
-     * @return {{sport: string, name: string, events: Array<number>, shortName: string}[]}
-     */
-    parseSections(resultsResponseData) {
-        if (!this.sportId) {
-            const sport = resultsResponseData.sports.find(sport => sport.name === filterSportMatching);
-            if (!sport) {
-                console.error('Fetched data', resultsResponseData);
-                throw new Error(`Not found sport name "${filterSectionsContaining}"`);
-            }
-            this.sportId = sport.id;
-        }
-
-        if (!resultsResponseData.sections)
-            return null;
-
-        let sections = resultsResponseData.sections.filter(section => section.sport === String(this.sportId));
-        sections = sections.filter(section => filterSectionsContaining.some(item => {
-            const result = section.name.includes(item);
-            if (result) {
-                section.shortName = item;
-            }
-            return result;
-        }));
-        sections.forEach((section) => {
-            section.events = section.events.map(eventId => resultsResponseData.events.find(
-                event => event.id === String(eventId)));
-        });
-
-        return sections;
-    },
-    /**
-     * @param section
-     * @param {string} section.shortName
-     * @param {Array <Object>} section.events
-     */
-    parseSectionEvents(section) {
-        const result = section.events.map((event) => {
-            EventParser.logUnusualEventData(event);
-            if (!event.score) {
-                return null;
-            }
-            return new EventParser(event);
-        });
-        return _.compact(result);
-    },
-
-    saveEvent(parsedEvent, sectionShortName) {
-        let scoreInfo = parsedEvent.score;
-        let csvRow = [
-            parsedEvent.startDateTime.toLocaleDateString(),
-            parsedEvent.startDateTime.toLocaleTimeString(),
-            parsedEvent.originalName,
-            scoreInfo.firstTime ? `'${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
-            parsedEvent.firstGoal.time ? parsedEvent.firstGoal.time : '',
-            parsedEvent.firstGoalTeamName,
-            `'${scoreInfo.totals[0]} - ${scoreInfo.totals[1]}`,
-        ];
-        fileUtils.appendFile(`${sectionShortName}.csv`, csvRow.join(';'), true);
-    }
-
-};
 
 (async () => {
     let date = new Date('2018-08-01');
@@ -112,17 +12,17 @@ fonbetResults = {
 
     while (date < today) {
         try {
-            const url = await fonbetResults.getApiUrl(date);
-            let results = await fonbetResults.fetchResults(url);
-            let sections = fonbetResults.parseSections(results);
+            const url = await fetcher.getApiUrl(date);
+            let results = await fetcher.fetchResults(url);
+            let sections = parseSections(results);
             if (sections) {
                 for (let section of sections ) {
-                    section.parsedEvents = fonbetResults.parseSectionEvents(section);
+                    section.parsedEvents = parseSectionEvents(section);
                 }
 
                 for (let section of sections ) {
                     for (let event of section.parsedEvents ) {
-                        fonbetResults.saveEvent(event);
+                        saveParsedEvent(event);
                     }
                 }
             }
