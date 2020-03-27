@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const validateParsing = true;
- const switchcase = require('switchcase');
+const switchcase = require('switchcase');
 
 const EVENT_STATUS = {
     COMPLETED: 3,
@@ -17,12 +17,15 @@ class EventParser {
      * @param {string} event.comment3
      * @param {string} event.name
      * @param {number} event.status
+     * @param {number} event.startTime
      */
     constructor(event) {
         try {
             this.score =  this.parseScore(event.score);
             this.firstGoal = this.parseFirstGoalComment(event.comment3);
             this.teamNames = event.name.split(' - ');
+            this.originalName = event.name;
+            this.startDateTime =  new Date(event.startTime * 1000);
         } catch (err) {
             console.error(`${err.message}\nFailed to parse event ${JSON.stringify(event)}`);
             throw err;

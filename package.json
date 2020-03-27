@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "lodash": "latest",
+    "node-fetch": "^2.6.0",
     "switchcase": "latest"
   }
 }

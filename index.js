@@ -43,9 +43,9 @@ fonbetResults = {
      * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
      * @param {Array <{id: string}>} resultsResponseData.events
      * @param resultsResponseData
-     * @return {{sport: string, name: string, events: Array<number> }[]}
+     * @return {{sport: string, name: string, events: Array<number>, shortName: string}[]}
      */
-    parseSectionEvents(resultsResponseData) {
+    parseSections(resultsResponseData) {
         if (!this.sportId) {
             const sport = resultsResponseData.sports.find(sport => sport.name === filterSportMatching);
             if (!sport) {
@@ -78,36 +78,35 @@ fonbetResults = {
      * @param {string} section.shortName
      * @param {Array <Object>} section.events
      */
-    saveSectionEvents(section) {
-        section.events.forEach((event) => {
-            let startDateTime = new Date(event.startTime * 1000);
-
+    parseSectionEvents(section) {
+        const result = section.events.map((event) => {
             EventParser.logUnusualEventData(event);
             if (!event.score) {
-                return;
+                return null;
             }
-            let parsedEvent = new EventParser(event);
-            let scoreInfo = parsedEvent.score;
-
-            let csvRow = [
-                startDateTime.toLocaleDateString(),
-                startDateTime.toLocaleTimeString(),
-                event.name,
-                scoreInfo.firstTime ? `'${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
-                parsedEvent.firstGoal.time ? parsedEvent.firstGoal.time : '',
-                parsedEvent.firstGoalTeamName,
-                `'${scoreInfo.totals[0]} - ${scoreInfo.totals[1]}`,
-            ];
-            fileUtils.appendFile(`${section.shortName}.csv`, csvRow.join(';'), true);
+            return new EventParser(event);
         });
+        return _.compact(result);
     },
+
+    saveEvent(parsedEvent, sectionShortName) {
+        let scoreInfo = parsedEvent.score;
+        let csvRow = [
+            parsedEvent.startDateTime.toLocaleDateString(),
+            parsedEvent.startDateTime.toLocaleTimeString(),
+            parsedEvent.originalName,
+            scoreInfo.firstTime ? `'${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
+            parsedEvent.firstGoal.time ? parsedEvent.firstGoal.time : '',
+            parsedEvent.firstGoalTeamName,
+            `'${scoreInfo.totals[0]} - ${scoreInfo.totals[1]}`,
+        ];
+        fileUtils.appendFile(`${sectionShortName}.csv`, csvRow.join(';'), true);
+    }
 
 };
 
-
 (async () => {
-    // 2018-03-01
-    let date = new Date('2020-03-18');
+    let date = new Date('2018-08-01');
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
@@ -115,12 +114,19 @@ fonbetResults = {
         try {
             const url = await fonbetResults.getApiUrl(date);
             let results = await fonbetResults.fetchResults(url);
-            let sections = fonbetResults.parseSectionEvents(results);
+            let sections = fonbetResults.parseSections(results);
             if (sections) {
-                sections.forEach(section => {
-                    fonbetResults.saveSectionEvents(section);
-                });
+                for (let section of sections ) {
+                    section.parsedEvents = fonbetResults.parseSectionEvents(section);
+                }
+
+                for (let section of sections ) {
+                    for (let event of section.parsedEvents ) {
+                        fonbetResults.saveEvent(event);
+                    }
+                }
             }
+
         } catch (err) {
             console.error(err.message);
         }
