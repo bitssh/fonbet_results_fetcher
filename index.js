@@ -3,7 +3,6 @@ const fetch = require('node-fetch');
 const _ = require('lodash');
 const fileUtils = require('../fonbet_live_watcher/src/fileTools');
 const {EventParser} = require("./EventParser");
-
 const fonbetDomainUrl = 'https://www.fonbet.ru';
 const filterSportMatching = 'Киберфутбол';
 const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби', 'Серия сборных'];
@@ -22,15 +21,15 @@ fonbetResults = {
         return `${await this.getRandomUrl()}/results/results.json.php?${urlParams}`
     },
 
-    async getRandomUrl () {
+    async getRandomUrl() {
         if (_.isEmpty(this.apiUrls)) {
             const response = await fetch(`${fonbetDomainUrl}/urls.json`);
-            let { common: apiUrls } = await response.json();
+            let {common: apiUrls} = await response.json();
             this.apiUrls = apiUrls.map(url => `https:${url}`);
         }
         return _.sample(this.apiUrls);
     },
-    async fetchResults (url) {
+    async fetchResults(url) {
         console.log(`fetching ${url}`);
         let response = await fetch(url);
         if (!response.ok) {
@@ -46,7 +45,7 @@ fonbetResults = {
      * @param resultsResponseData
      * @return {{sport: string, name: string, events: Array<number> }[]}
      */
-    parseSectionEvents (resultsResponseData) {
+    parseSectionEvents(resultsResponseData) {
         if (!this.sportId) {
             const sport = resultsResponseData.sports.find(sport => sport.name === filterSportMatching);
             if (!sport) {
@@ -79,6 +78,8 @@ fonbetResults = {
     saveSectionEvents(section) {
         section.events.forEach((event) => {
             let startDateTime = new Date(event.startTime * 1000);
+
+            EventParser.logUnusualEventData(event);
             let parsedEvent = new EventParser(event);
             let scoreInfo = parsedEvent.score;
 

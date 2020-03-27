@@ -1,12 +1,22 @@
 const _ = require('lodash');
 const validateParsing = true;
+ const switchcase = require('switchcase');
+
+const EVENT_STATUS = {
+    COMPLETED: 3,
+    CANCELED: 4,
+    INTERRUPTED: 9,
+};
 
 class EventParser {
     /**
      * @param {Object} event
      * @param {string} event.score
+     * @param {string} event.comment1
+     * @param {string} event.comment2
      * @param {string} event.comment3
      * @param {string} event.name
+     * @param {number} event.status
      */
     constructor(event) {
         try {
@@ -98,6 +108,21 @@ class EventParser {
             return ''
         }
         return this.teamNames[this.firstGoalTeamNo];
+    }
+
+    static logUnusualEventData(event) {
+        if (event.comment1 || event.comment2) {
+            console.log('Found uncommon event comments', event);
+        }
+        if (event.status !== EVENT_STATUS.COMPLETED) {
+            const warnDescription = switchcase({
+                [EVENT_STATUS.CANCELED]: "Event is canceled",
+                [EVENT_STATUS.INTERRUPTED]: "Event is interrupted",
+                default: "Unknown event status"
+            })(event.status);
+
+            console.warn(warnDescription, event);
+        }
     }
 
 }
