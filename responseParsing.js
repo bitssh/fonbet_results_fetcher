@@ -2,7 +2,7 @@ const {EventParser} = require("./EventParser");
 const _ = require('lodash');
 
 const filterSportMatching = 'Киберфутбол';
-const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби', 'Серия сборных'];
+const filterSectionsContaining = ['Евролига', 'Мировая лига', 'Лига Про', 'Серия дерби', 'Серия сборных'];
 /**
  * @param {Array} resultsResponseData.sports
  * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
