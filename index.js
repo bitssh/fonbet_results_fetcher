@@ -1,9 +1,9 @@
 const {parseSectionEvents} = require("./responseParsing");
 const {parseSections} = require("./responseParsing");
-const {writeParsedEventToCSV} = require("./dataSaving");
 const {fetcher} = require("./dataFetching");
+const{appendLinesToFile} = require('../fonbet_live_watcher/src/fileTools');
 
-const START_DATE = '2018-03-01';
+const START_DATE = '2020-03-26';
 
 console.log('initialized');
 (async () => {
@@ -27,12 +27,12 @@ console.log('initialized');
                     section.parsedEvents = parseSectionEvents(section);
                 }
                 for (let section of sections) {
-                    for (let event of section.parsedEvents) {
-                        writeParsedEventToCSV(event, section.shortName);
-                    }
+                    let csvRows = section.parsedEvents.map(event => event.asCsvRow);
+                    appendLinesToFile(`${section.shortName}.csv`, csvRows, true);
                 }
             }
             date.setDate(date.getDate() + 1);
+            break;
         }
     } catch (err) {
         console.error(err.message);

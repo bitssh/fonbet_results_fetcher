@@ -20,7 +20,7 @@ class EventParser {
      * @param {number} event.startTime
      */
     constructor(event) {
-        this.score =  this.parseScore(event.score);
+        this.scoreInfo =  this.parseScore(event.score);
         this.firstGoal = this.parseFirstGoalComment(event.comment3);
         this.teamNames = event.name.split(' - ');
         this.originalName = event.name;
@@ -85,9 +85,9 @@ class EventParser {
         if (result !== null)
             return result;
 
-        let score = this.score.firstTime;
+        let score = this.scoreInfo.firstTime;
         if (!score || score[0] === score[1]) {
-            score = this.score.totals;
+            score = this.scoreInfo.totals;
         }
         if (score[0] > score[1])
             return 0;
@@ -122,6 +122,21 @@ class EventParser {
             console.info(warnDescription, event);
         }
     }
+
+    get asCsvRow () {
+        let { scoreInfo } = this;
+        return [
+            this.startDateTime.toLocaleDateString(),
+            this.startDateTime.toLocaleTimeString(),
+            this.originalName,
+            scoreInfo.firstTime ? `'${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
+            this.firstGoal.time ? this.firstGoal.time : '',
+            this.firstGoalTeamName,
+            `'${scoreInfo.totals[0]} - ${scoreInfo.totals[1]}`,
+        ].join(';');
+    };
+
+
 
 }
 
