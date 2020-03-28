@@ -11,7 +11,7 @@ fetcher = {
             locale: 'ru',
             lastUpdate: 0,
             _: Date.now(),
-            lineDate: date.toISOString().split('T')[0],
+            lineDate: date.toISOString(true).split('T')[0],
         });
         return `${await this.getRandomUrl()}/results/results.json.php?${urlParams}`
     },

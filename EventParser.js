@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const validateParsing = true;
 const switchcase = require('switchcase');
+const moment = require("moment");
 
 const EVENT_STATUS = {
     COMPLETED: 3,
@@ -24,7 +25,7 @@ class EventParser {
         this.firstGoal = this.parseFirstGoalComment(event.comment3);
         this.teamNames = event.name.split(' - ');
         this.originalName = event.name;
-        this.startDateTime =  new Date(event.startTime * 1000);
+        this.startMoment =  moment.unix(event.startTime);
     }
     /**
      *
@@ -126,8 +127,8 @@ class EventParser {
     get asCsvRow () {
         let { scoreInfo } = this;
         return [
-            this.startDateTime.toLocaleDateString(),
-            this.startDateTime.toLocaleTimeString(),
+            this.startMoment.toDate().toLocaleDateString(),
+            this.startMoment.toDate().toLocaleTimeString(),
             this.originalName,
             scoreInfo.firstTime ? `'${scoreInfo.firstTime[0]} - ${scoreInfo.firstTime[1]}` : '',
             this.firstGoal.time ? this.firstGoal.time : '',
