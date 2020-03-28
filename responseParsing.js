@@ -8,7 +8,7 @@ const filterSectionsContaining = ['Евролига', 'Мировая лига'
  * @param {Array <{sport: string, name: string, events: Array<number>}>} resultsResponseData.sections
  * @param {Array <{id: string}>} resultsResponseData.events
  * @param resultsResponseData
- * @return {{sport: string, name: string, events: Array<number>, shortName: string}[]}
+ * @return {{sport: string, name: string, events: Array<number>}[]}
  */
 exports.parseSections = function parseSections(resultsResponseData) {
     if (!this.sportId) {
