@@ -24,14 +24,14 @@ fetcher = {
         }
         return _.sample(this.apiUrls);
     },
-    async fetchResults(url) {
+    async fetch(url) {
         console.log(`fetching ${url}`);
         let response = await fetch(url);
         if (!response.ok) {
             console.error(`${new Date().toLocaleString()} ${response.status} - ${await response.text()}`);
             return;
         }
-        return JSON.parse(await response.text());
+        return response;
     },
 };
 
