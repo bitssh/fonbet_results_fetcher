@@ -3,7 +3,7 @@ const {parseSections} = require("./responseParsing");
 const {fetcher} = require("./dataFetching");
 const{appendLinesToFile} = require('../fonbet_live_watcher/src/fileTools');
 
-const START_DATE = '2020-03-26';
+const START_DATE = '2018-03-01';
 
 console.log('initialized');
 (async () => {
@@ -32,7 +32,6 @@ console.log('initialized');
                 }
             }
             date.setDate(date.getDate() + 1);
-            break;
         }
     } catch (err) {
         console.error(err.message);

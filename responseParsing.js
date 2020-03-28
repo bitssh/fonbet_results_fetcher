@@ -47,7 +47,6 @@ exports.parseSectionEvents = function parseSectionEvents(section) {
     const result = section.events.map((event) => {
         EventParser.logUnusualEventData(event);
         if (!event.score) {
-            console.info('Event has empty score');
             return null;
         }
         try {

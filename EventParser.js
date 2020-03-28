@@ -113,13 +113,13 @@ class EventParser {
             console.log('Found uncommon event comments', event);
         }
         if (event.status !== EVENT_STATUS.COMPLETED) {
-            const warnDescription = switchcase({
-                [EVENT_STATUS.CANCELED]: "Event is canceled",
-                [EVENT_STATUS.INTERRUPTED]: "Event is interrupted",
-                default: "Unknown event status"
+            const warnDescription = `Event [${event.id}] ` + switchcase({
+                [EVENT_STATUS.CANCELED]: `is canceled`,
+                [EVENT_STATUS.INTERRUPTED]: `is interrupted`,
+                default: ` has unknown status`
             })(event.status);
 
-            console.info(warnDescription, event);
+            console.info(warnDescription);
         }
     }
 
