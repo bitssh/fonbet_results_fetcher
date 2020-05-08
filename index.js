@@ -4,11 +4,15 @@ const {fetcher} = require("./dataFetching");
 const{appendLinesToFile} = require('../fonbet_live_watcher/src/fileTools');
 const moment = require("moment");
 
-const FETCH_FROM_DATE = '2018-03-01';
 const EVENTS_START_HOUR = 8;
+const FETCH_FROM_DATE = process.argv.slice(2)[0];
+
+if (!FETCH_FROM_DATE) {
+    console.warn('Date must be specified as parameter');
+    return;
+}
 
 (async () => {
-    console.log('initialized');
     let date = moment(FETCH_FROM_DATE).startOf('day');
     const today = moment().startOf('day');
     try {
